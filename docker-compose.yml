@@ -55,8 +55,6 @@ services:
 
 networks:
   shortener:
-    external: true
-    name: traefik
 
 volumes:
   pg_data:
