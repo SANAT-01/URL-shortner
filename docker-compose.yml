@@ -11,11 +11,18 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: shortener
       REDISHOST: redis
-      PUBLIC_BASE_URL: "https://shorten.sanattudu.tech"
+      PUBLIC_BASE_URL: "https://go.sanattudu.tech"
     depends_on:
       - pg
       - redis
     networks: [shortener]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.shortener-backend.rule=Host(`go.sanattudu.tech`)"
+      - "traefik.http.routers.shortener-backend.entrypoints=websecure"
+      - "traefik.http.routers.shortener-backend.tls=true"
+      - "traefik.http.routers.shortener-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.shortener-backend.loadbalancer.server.port=8000"
 
   frontend:
     build: ./frontend
@@ -28,11 +35,11 @@ services:
     networks: [shortener]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.shortener.rule=Host(`shorten.sanattudu.tech`)"
-      - "traefik.http.routers.shortener.entrypoints=websecure"
-      - "traefik.http.routers.shortener.tls=true"
-      - "traefik.http.routers.shortener.tls.certresolver=letsencrypt"
-      - "traefik.http.services.shortener.loadbalancer.server.port=3000"
+      - "traefik.http.routers.shortener-frontend.rule=Host(`shorten.sanattudu.tech`)"
+      - "traefik.http.routers.shortener-frontend.entrypoints=websecure"
+      - "traefik.http.routers.shortener-frontend.tls=true"
+      - "traefik.http.routers.shortener-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.shortener-frontend.loadbalancer.server.port=3000"
 
   redis:
     image: redis:7-alpine
