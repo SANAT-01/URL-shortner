@@ -1,0 +1,44 @@
+# Local dev only — auto-loaded alongside docker-compose.yml by plain
+# `docker compose up`. Adds back host ports and the dev admin UIs that the
+# production file (Traefik-routed, no published ports) intentionally omits.
+#
+# One-time local setup: docker-compose.yml's `shortener` network is external,
+# pointing at the real Traefik network on the server. Locally there's no
+# Traefik, so create an empty stand-in once:
+#   docker network create traefik
+
+services:
+  backend:
+    ports:
+      - "8000:8000"
+    environment:
+      PUBLIC_BASE_URL: "http://localhost:8000"
+
+  frontend:
+    ports:
+      - "3000:3000"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: url-shortener-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - pg
+    networks: [shortener]
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: url-shortener-redisinsight
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+    networks: [shortener]

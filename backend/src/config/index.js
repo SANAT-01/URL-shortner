@@ -25,6 +25,7 @@ module.exports = {
     host: process.env.PGHOST || 'pg',
     port: intEnv('PGPORT', 5432),
     user: process.env.PGUSER || 'app',
+    password: process.env.PGPASSWORD,
     database: process.env.PGDATABASE || 'shortener',
   },
   redis: {

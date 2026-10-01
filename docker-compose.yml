@@ -1,83 +1,62 @@
-version: '3.8'
-
 services:
-  # app:
-  #   build: ./app
-  #   environment:
-  #     # Cache starts DISABLED — turning it on is the student's task.
-  #     CACHE_ENABLED: "true"
-  #     # 302 by default; the 301-vs-302 task flips this.
-  #     REDIRECT_STATUS: "302"
-  #     PGHOST: pg
-  #     PGUSER: app
-  #     PGDATABASE: shortener
-  #     REDISHOST: redis
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     - pg
-  #     - redis
-
   backend:
     build: ./backend
+    container_name: url-shortener-backend
+    restart: unless-stopped
     environment:
-      # Node.js backend — same behavior as ./app (the Python version), separate
-      # port so both can run side by side against the same pg/redis.
       CACHE_ENABLED: "true"
       REDIRECT_STATUS: "302"
       PGHOST: pg
       PGUSER: app
+      PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: shortener
       REDISHOST: redis
-      PUBLIC_BASE_URL: "http://localhost:8000"
-    ports:
-      - "8000:8000"
+      PUBLIC_BASE_URL: "https://shorten.sanattudu.tech"
     depends_on:
       - pg
       - redis
+    networks: [shortener]
 
   frontend:
     build: ./frontend
+    container_name: url-shortener-frontend
+    restart: unless-stopped
     environment:
-      # Server-only — the Next.js server reaches the backend over the compose
-      # network by service name, not through the host-published port.
       BACKEND_URL: "http://backend:8000"
-    ports:
-      - "3000:3000"
     depends_on:
       - backend
+    networks: [shortener]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.shortener.rule=Host(`shorten.sanattudu.tech`)"
+      - "traefik.http.routers.shortener.entrypoints=websecure"
+      - "traefik.http.routers.shortener.tls=true"
+      - "traefik.http.routers.shortener.tls.certresolver=letsencrypt"
+      - "traefik.http.services.shortener.loadbalancer.server.port=3000"
 
   redis:
     image: redis:7-alpine
-    # Optional: Uncomment the lines below if you also want to access Redis 
-    # directly from your laptop's terminal via local port 6379
-    # ports:
-    #   - "6379:6379"
-
-  redisinsight:
-    image: redis/redisinsight:latest
-    container_name: url-shortner-redisinsight
-    ports:
-      - "5540:5540"
-    depends_on:
-      - redis
+    container_name: url-shortener-redis
+    restart: unless-stopped
+    networks: [shortener]
 
   pg:
     image: postgres:16-alpine
+    container_name: url-shortener-pg
+    restart: unless-stopped
     environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
       POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
       POSTGRES_DB: shortener
     volumes:
-      - ./pg/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./backend/pg/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pg_data:/var/lib/postgresql/data
+    networks: [shortener]
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: url-shortner-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "8080:80"
-    depends_on:
-      - pg
+networks:
+  shortener:
+    external: true
+    name: traefik
+
+volumes:
+  pg_data:

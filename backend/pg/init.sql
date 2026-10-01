@@ -13,6 +13,6 @@ CREATE TABLE links (
 
 -- Seeded links. cat42 is the "celebrity link" the hot-key tasks hammer.
 INSERT INTO links (id, code, long_url) VALUES
-  (1, 'cat42', 'https://example.com/keyboard-cat'),
-  (2, 'docs1', 'https://kodekloud.com/courses'),
-  (3, 'blog7', 'https://example.com/system-design-blog');
+  (1, 'new1', 'https://sanattudu.tech'),
+  (2, 'new2', 'https://n8n.sanattudu.tech'),
+  (3, 'new3', 'https://jenkins.sanattudu.tech');
