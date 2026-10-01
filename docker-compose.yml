@@ -36,6 +36,17 @@ services:
       - pg
       - redis
 
+  frontend:
+    build: ./frontend
+    environment:
+      # Server-only — the Next.js server reaches the backend over the compose
+      # network by service name, not through the host-published port.
+      BACKEND_URL: "http://backend:8000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
   redis:
     image: redis:7-alpine
     # Optional: Uncomment the lines below if you also want to access Redis 
