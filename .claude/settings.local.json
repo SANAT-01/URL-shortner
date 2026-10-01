@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker --version)",
+      "Bash(docker compose *)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(curl -sv http://localhost:8000/r/cat42)",
+      "Bash(curl -s -X POST http://localhost:8000/shorten -d \"https://example.org/hello\")",
+      "Bash(curl -sv http://localhost:8000/r/2Br)",
+      "Bash(curl -s -o /dev/null http://localhost:8000/r/cat42)",
+      "Bash(curl -s http://localhost:8000/stats/cat42)",
+      "Bash(cd /Users/sanattudu/.claude/skills/archify && ls schemas/ examples/ 2>&1)",
+      "Read(//Users/sanattudu/Work/All Of My Claude Skills/.claude/skills/archify/**)",
+      "Bash(node bin/archify.mjs validate sequence /private/tmp/claude-501/-Users-sanattudu-Work-URL-shortner/62458ec8-e11f-44b4-9cfc-c7446cacf7c9/scratchpad/url-shortener-flow.sequence.json --quality showcase --json)",
+      "Bash(node bin/archify.mjs deliver sequence /private/tmp/claude-501/-Users-sanattudu-Work-URL-shortner/62458ec8-e11f-44b4-9cfc-c7446cacf7c9/scratchpad/url-shortener-flow.sequence.json /private/tmp/claude-501/-Users-sanattudu-Work-URL-shortner/62458ec8-e11f-44b4-9cfc-c7446cacf7c9/scratchpad/url-shortener-flow.html --quality showcase --json)"
+    ]
+  }
+}
