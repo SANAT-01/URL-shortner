@@ -1,0 +1,29 @@
+services:
+  app:
+    build: ./app
+    environment:
+      # Cache starts DISABLED — turning it on is the student's task.
+      CACHE_ENABLED: "true"
+      # 302 by default; the 301-vs-302 task flips this.
+      REDIRECT_STATUS: "301"
+      PGHOST: pg
+      PGUSER: app
+      PGDATABASE: shortener
+      REDISHOST: redis
+    ports:
+      - "8000:8000"
+    depends_on:
+      - pg
+      - redis
+
+  redis:
+    image: redis:7-alpine
+
+  pg:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: app
+      POSTGRES_DB: shortener
+    volumes:
+      - ./pg/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
