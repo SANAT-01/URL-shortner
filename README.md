@@ -1,4 +1,4 @@
-# shortly
+# shortly - https://shorten.sanattudu.tech/
 
 A URL shortener with a Next.js frontend and an Express backend, using Postgres as the
 source of truth and Redis as a cache-aside layer plus click counter.
@@ -87,7 +87,7 @@ docker compose up -d --build
 
 - Frontend: http://localhost:3000
 - Backend: http://localhost:8000
-- pgAdmin: http://localhost:8080 (`admin@admin.com` / `admin`)
+- pgAdmin: http://localhost:8080 
 - Redis Insight: http://localhost:5540
 
 `docker compose up -d` auto-merges `docker-compose.override.yml`, which is what adds those
