@@ -1,11 +1,16 @@
 # Local dev only — auto-loaded alongside docker-compose.yml by plain
-# `docker compose up`. Adds back host ports and the dev admin UIs that the
-# production file (Traefik-routed, no published ports) intentionally omits.
+# `docker compose up`. The base file is wired for production (points at a
+# shared external Postgres via PGHOST=postgres on the external backend-net
+# network, no published ports, no dev admin UIs). This override gives local
+# dev its own dedicated pg/redis containers instead, and restores published
+# ports + pgAdmin/Redis Insight.
 #
-# One-time local setup: docker-compose.yml's `shortener` network is external,
-# pointing at the real Traefik network on the server. Locally there's no
-# Traefik, so create an empty stand-in once:
-#   docker network create traefik
+# One-time local setup — docker-compose.yml references an external
+# `backend-net` network (wherever the shared production Postgres lives).
+# Compose merges `networks:` lists rather than letting an override remove
+# one, so backend still references backend-net even here. Create an empty
+# local stand-in once:
+#   docker network create backend-net
 
 services:
   backend:
@@ -13,14 +18,34 @@ services:
       - "8000:8000"
     environment:
       PUBLIC_BASE_URL: "http://localhost:8000"
+      PGHOST: pg
+      PGUSER: app
+    networks: [shortener]
 
   frontend:
     ports:
       - "3000:3000"
 
   redis:
+    image: redis:7-alpine
+    container_name: url-shortener-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    networks: [shortener]
+
+  pg:
+    image: postgres:16-alpine
+    container_name: url-shortener-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      POSTGRES_DB: shortener
+    volumes:
+      - ./backend/pg/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pg_data:/var/lib/postgresql/data
+    networks: [shortener]
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -42,3 +67,6 @@ services:
     depends_on:
       - redis
     networks: [shortener]
+
+volumes:
+  pg_data:
