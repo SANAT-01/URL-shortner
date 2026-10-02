@@ -6,16 +6,17 @@ services:
     environment:
       CACHE_ENABLED: "true"
       REDIRECT_STATUS: "302"
-      PGHOST: pg
-      PGUSER: app
+      # Now pointing at the shared Postgres on backend-net instead of a
+      # dedicated pg container for this app.
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-postgres}
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: shortener
       REDISHOST: redis
       PUBLIC_BASE_URL: "https://go.sanattudu.tech"
-    depends_on:
-      - pg
-      - redis
-    networks: [shortener]
+    # depends_on:
+    #   - pg   # no longer needed — postgres now runs in the shared backend-net stack
+    networks: [shortener, backend-net]
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.shortener-backend.rule=Host(`go.sanattudu.tech`)"
@@ -41,27 +42,30 @@ services:
       - "traefik.http.routers.shortener-frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.shortener-frontend.loadbalancer.server.port=3000"
 
-  redis:
-    image: redis:7-alpine
-    container_name: url-shortener-redis
-    restart: unless-stopped
-    networks: [shortener]
+  # for local development or seperate contaioners already running, you can uncomment the following services to run Redis and PostgreSQL containers. Make sure to set the POSTGRES_PASSWORD in your .env file.
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: url-shortener-redis
+  #   restart: unless-stopped
+  #   networks: [shortener]
 
-  pg:
-    image: postgres:16-alpine
-    container_name: url-shortener-pg
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
-      POSTGRES_DB: shortener
-    volumes:
-      - ./backend/pg/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-      - pg_data:/var/lib/postgresql/data
-    networks: [shortener]
+  # pg:
+  #   image: postgres:16-alpine
+  #   container_name: url-shortener-pg
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: app
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+  #     POSTGRES_DB: shortener
+  #   volumes:
+  #     - ./backend/pg/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  #     - pg_data:/var/lib/postgresql/data
+  #   networks: [shortener]
 
 networks:
   shortener:
+  backend-net:
+    external: true
 
-volumes:
-  pg_data:
+# volumes:
+#   pg_data:   # no longer needed, data now lives in the shared postgres_data volume
